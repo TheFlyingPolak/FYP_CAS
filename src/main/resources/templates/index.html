@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PAckage VErsion Management System - Main Page</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.1/bootstrap-table.min.js"></script>
+</head>
+<body>
+    <script>
+        function buttonClick(id){
+            alert(id);
+        }
+    </script>
+    <!-- Heading container -->
+    <div class="container-fluid">
+        <h1 style="text-align: center">PAVEMAS (PAckage VErsion Management System)</h1>
+        <h1 style="text-align: center">Main Page</h1>
+    </div>
+    <!-- Button container -->
+    <div class="container">
+        <div class="btn-group">
+            <button type="button" class="btn btn-primary">Log All Now</button>
+            <button type="button" class="btn btn-primary">Set Log Time For All</button>
+        </div>
+    </div>
+    <!-- Agent data container -->
+    <div class="container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Host Name</th>
+                    <th>OS Name</th>
+                    <th>OS Version</th>
+                    <th>View Packages</th>
+                </tr>
+            </thead>
+            <tbody id="host_content">
+            </tbody>
+        </table>
+    </div>
+    <!-- Package lists container -->
+    <div class="container-fluid">
+        <div class="container testimonial-group">
+                <div class="row text-center flex-nowrap" id="packages">
+
+                </div>
+        </div>
+    </div>
+    <script>
+        var data = [];
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost/agents',
+            contentType: "application/json",
+            dataType: 'json',
+            async: false,
+            success: function(d) {
+                $.each(d, function(key, value) {
+                    console.log(value);
+                    var agent = [];
+                    agent['id'] = value['id'];
+                    agent['hostname'] = value['hostname'];
+                    agent['osName'] = value['osName'];
+                    agent['osVersion'] = value['osVersion'];
+                    agent['packages'] = value['packages'];
+                    data.push(agent);
+                });
+            }
+        });
+        // Construct table of agent data
+        var tablecontents = "";
+        for (var i = 0; i < data.length; i++) {
+            var buttonTag = "<button type='button' class='btn btn-primary' id='" + data[i]['id'] + "' onclick='buttonClick(this.id)'></button>";
+            tablecontents += "<tr>";
+            tablecontents += "<td>" + data[i]["hostname"] + "</td>";
+            tablecontents += "<td>" + data[i]["osName"] + "</td>";
+            tablecontents += "<td>" + data[i]["osVersion"] + "</td>";
+            tablecontents += "<td>" + buttonTag + "</td>";
+            tablecontents += "</tr>";
+        }
+        document.getElementById("host_content").innerHTML += tablecontents;
+
+        // Construct table of package lists
+        tablecontents = "";
+        for (i = 0; i < data.length; i++){
+            tablecontents += "<div class='col-3'><h2>Agent " + data[i]["id"] + "</h2><table class='table'><thead><tr><th>Name</th><th>Version</th></tr></thead>";
+            tablecontents += "<tbody id='agent_" + data[i]['id'] + "'>";
+            var packageList = data[i]["packages"];
+            for (var j = 0; j < packageList.length; j++){
+                tablecontents += "<tr>";
+                tablecontents += "<td>" + packageList[j]["name"] + "</td>";
+                tablecontents += "<td>" + packageList[j]["version"] + "</td>";
+                tablecontents += "</tr>";
+            }
+            tablecontents += "</tbody></table></div>"
+        }
+        document.getElementById("packages").innerHTML += tablecontents;
+    </script>
+</body>
+</html>

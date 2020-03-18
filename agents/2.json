@@ -1,0 +1,14 @@
+{
+  "id": "2",
+  "hostname": "127.0.0.1",
+  "osName": "Windows 10",
+  "osVersion": "420.69",
+  "packages": [
+    {
+      "name": "Counter Strike: Global Offensive",
+      "version": "4.5.6",
+      "architecture": "x86",
+      "description": "Game about killing terrorists"
+    }
+  ]
+}
