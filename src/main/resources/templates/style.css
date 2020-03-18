@@ -1,8 +1,0 @@
-.testimonial-group > .row {
-    overflow-x: auto;
-    white-space: nowrap;
-}
-.testimonial-group > .row > .col-sm-4 {
-    display: inline-block;
-    float: none;
-}

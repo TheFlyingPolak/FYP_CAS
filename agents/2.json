@@ -2,7 +2,7 @@
   "id": "2",
   "hostname": "127.0.0.1",
   "osName": "Windows 10",
-  "osVersion": "420.69",
+  "osVersion": "1.2.1",
   "packages": [
     {
       "name": "Counter Strike: Global Offensive",

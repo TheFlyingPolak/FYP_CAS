@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PAckage VErsion Management System - Main Page</title>
+    <title>Package Version Management System - Main Page</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -19,7 +19,7 @@
     </script>
     <!-- Heading container -->
     <div class="container-fluid">
-        <h1 style="text-align: center">PAVEMAS (PAckage VErsion Management System)</h1>
+        <h1 style="text-align: center">Package Version Management System (PVMS)</h1>
         <h1 style="text-align: center">Main Page</h1>
     </div>
     <!-- Button container -->
@@ -56,7 +56,7 @@
         var data = [];
         $.ajax({
             type: 'GET',
-            url: 'http://localhost/agents',
+            url: window.location.origin + '/agents',
             contentType: "application/json",
             dataType: 'json',
             async: false,
