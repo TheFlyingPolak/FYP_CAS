@@ -15,16 +15,11 @@
     <script type="text/javascript" src="functions.js"></script>
     <script>
         function sendCommand(command, data, time){
-            var commandPayload = [];
-            commandPayload['command'] = command;
-            if (command === "change_log_time_interval")
-                commandPayload['time'] = time;
-
+            var commandPayload = {command: command, time: time};
             for (var i = 0; i < data.length; i++) {
-                var host = data[i]['hostname'].trim();
                 $.ajax({
                     type: 'POST',
-                    url: 'http://' + host + ':8081/command',
+                    url: window.location.origin + '/command',
                     data: JSON.stringify(commandPayload),
                     contentType: "application/json",
                     dataType: 'json',
