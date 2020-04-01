@@ -7,7 +7,6 @@ public class Package {
     private String name;
     private String version;
     private String architecture;
-    private String description;
 
     public Package() {}
 }
