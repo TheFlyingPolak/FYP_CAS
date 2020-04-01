@@ -5,17 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Package Version Management System - Main Page</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="style.css">
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.1/bootstrap-table.min.js"></script>
 </head>
 <body>
+    <script type="text/javascript" src="functions.js"></script>
     <script>
-        function buttonClick(id){
-            alert(id);
+        function sendCommand(command, data, time){
+            var commandPayload = [];
+            commandPayload['command'] = command;
+            if (command === "change_log_time_interval")
+                commandPayload['time'] = time;
+
+            for (var i = 0; i < data.length; i++) {
+                var host = data[i]['hostname'].trim();
+                $.ajax({
+                    type: 'POST',
+                    url: 'http://' + host + ':8081/command',
+                    data: JSON.stringify(commandPayload),
+                    contentType: "application/json",
+                    dataType: 'json',
+                    success: function () {
+                        alert("Command sent successfully!")
+                    },
+                    failure: function () {
+                        alert("Command failed!")
+                    }
+                })
+            }
         }
+
+        var data = [];
+        $.ajax({
+            type: 'GET',
+            url: window.location.origin + '/agents',
+            contentType: "application/json",
+            dataType: 'json',
+            async: false,
+            success: function(d) {
+                $.each(d, function(key, value) {
+                    console.log(value);
+                    var agent = [];
+                    agent['id'] = value['id'];
+                    agent['hostname'] = value['hostname'];
+                    agent['osName'] = value['osName'];
+                    agent['osVersion'] = value['osVersion'];
+                    agent['packages'] = value['packages'];
+                    data.push(agent);
+                });
+            }
+        });
     </script>
     <!-- Heading container -->
     <div class="container-fluid">
@@ -25,8 +67,8 @@
     <!-- Button container -->
     <div class="container">
         <div class="btn-group">
-            <button type="button" class="btn btn-primary">Log All Now</button>
-            <button type="button" class="btn btn-primary">Set Log Time For All</button>
+            <button type="button" class="btn btn-primary" onclick="sendCommand('log_now', data, null)">Log All Now</button>
+            <button type="button" class="btn btn-primary" onclick="sendCommand('change_log_time_interval', data, prompt('Enter new log time'))">Set Log Time For All</button>
         </div>
     </div>
     <!-- Agent data container -->
@@ -53,26 +95,6 @@
         </div>
     </div>
     <script>
-        var data = [];
-        $.ajax({
-            type: 'GET',
-            url: window.location.origin + '/agents',
-            contentType: "application/json",
-            dataType: 'json',
-            async: false,
-            success: function(d) {
-                $.each(d, function(key, value) {
-                    console.log(value);
-                    var agent = [];
-                    agent['id'] = value['id'];
-                    agent['hostname'] = value['hostname'];
-                    agent['osName'] = value['osName'];
-                    agent['osVersion'] = value['osVersion'];
-                    agent['packages'] = value['packages'];
-                    data.push(agent);
-                });
-            }
-        });
         // Construct table of agent data
         var tablecontents = "";
         for (var i = 0; i < data.length; i++) {
