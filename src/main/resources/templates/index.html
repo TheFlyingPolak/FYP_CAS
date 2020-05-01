@@ -14,23 +14,29 @@
 <body>
     <script type="text/javascript" src="functions.js"></script>
     <script>
-        function sendCommand(command, data, time){
+        function buttonClick(id){
+            alert(id);
+        }
+        // send command once, data is a single object
+        function sendCommandToOne(command, id, time){
+            id = id.substring(1);
+            var url = window.location.origin + '/command/' + id;
+            sendCommand(command, url, time);
+        }
+        // send many commands, data is a list of objects
+        function sendCommandToAll(command, time){
+            var url = window.location.origin + '/command';
+            sendCommand(command, url, time);
+        }
+        function sendCommand(command, url, time){
             var commandPayload = {command: command, time: time};
-            for (var i = 0; i < data.length; i++) {
-                $.ajax({
-                    type: 'POST',
-                    url: window.location.origin + '/command',
-                    data: JSON.stringify(commandPayload),
-                    contentType: "application/json",
-                    dataType: 'json',
-                    success: function () {
-                        alert("Command sent successfully!")
-                    },
-                    failure: function () {
-                        alert("Command failed!")
-                    }
-                })
-            }
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: JSON.stringify(commandPayload),
+                contentType: "application/json",
+                dataType: 'json'
+            })
         }
 
         var data = [];
@@ -62,19 +68,20 @@
     <!-- Button container -->
     <div class="container">
         <div class="btn-group">
-            <button type="button" class="btn btn-primary" onclick="sendCommand('log_now', data, null)">Log All Now</button>
-            <button type="button" class="btn btn-primary" onclick="sendCommand('change_log_time_interval', data, prompt('Enter new log time'))">Set Log Time For All</button>
+            <button type="button" class="btn btn-primary" onclick="sendCommandToAll('log_now', null)">Log All Now</button>
+            <button type="button" class="btn btn-primary" onclick="sendCommandToAll('change_log_time_interval', prompt('Enter new log time'))">Set Log Time For All</button>
         </div>
     </div>
     <!-- Agent data container -->
     <div class="container">
-        <table class="table">
+        <table class="table table-sm">
             <thead>
                 <tr>
                     <th>Host Name</th>
                     <th>OS Name</th>
                     <th>OS Version</th>
-                    <th>View Packages</th>
+                    <th>Log Now</th>
+                    <th>Change Log Time</th>
                 </tr>
             </thead>
             <tbody id="host_content">
@@ -93,12 +100,14 @@
         // Construct table of agent data
         var tablecontents = "";
         for (var i = 0; i < data.length; i++) {
-            var buttonTag = "<button type='button' class='btn btn-primary' id='" + data[i]['id'] + "' onclick='buttonClick(this.id)'></button>";
+            var logButton = "<button type='button' class='btn btn-primary' id='l" + data[i]['id'] + "' onclick='sendCommandToOne(\"log_now\", this.id, null)'></button>";
+            var timeButton = "<button type='button' class='btn btn-primary' id='t" + data[i]['id'] + "' onclick='sendCommandToOne(\"change_log_time_interval\", this.id, prompt(\"Enter new log time\"))'></button>";
             tablecontents += "<tr>";
             tablecontents += "<td>" + data[i]["hostname"] + "</td>";
             tablecontents += "<td>" + data[i]["osName"] + "</td>";
             tablecontents += "<td>" + data[i]["osVersion"] + "</td>";
-            tablecontents += "<td>" + buttonTag + "</td>";
+            tablecontents += "<td>" + logButton + "</td>";
+            tablecontents += "<td>" + timeButton + "</td>";
             tablecontents += "</tr>";
         }
         document.getElementById("host_content").innerHTML += tablecontents;
@@ -106,7 +115,7 @@
         // Construct table of package lists
         tablecontents = "";
         for (i = 0; i < data.length; i++){
-            tablecontents += "<div class='col-3'><h2>Agent " + data[i]["id"] + "</h2><table class='table'><thead><tr><th>Name</th><th>Version</th></tr></thead>";
+            tablecontents += "<div class='col-3'><h2>Agent " + data[i]["id"] + "</h2><table class='table table-sm'><thead><tr><th>Name</th><th>Version</th></tr></thead>";
             tablecontents += "<tbody id='agent_" + data[i]['id'] + "'>";
             var packageList = data[i]["packages"];
             for (var j = 0; j < packageList.length; j++){

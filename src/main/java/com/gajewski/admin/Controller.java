@@ -1,6 +1,7 @@
 package com.gajewski.admin;
 
 import com.gajewski.structures.Command;
+import com.gajewski.structures.Conflict;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -16,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class Controller {
@@ -64,6 +66,12 @@ public class Controller {
             }
         }
         return list;
+    }
+
+    @GetMapping("/conflicts")
+    public Map<String, List<Long>> getConflicts(){
+        ConflictFinder finder = new ConflictFinder(PATH);
+        return finder.findConflicts();
     }
 
     @PostMapping("/command/{id}")
