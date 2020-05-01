@@ -69,7 +69,7 @@ public class Controller {
     }
 
     @GetMapping("/conflicts")
-    public Map<String, List<Long>> getConflicts(){
+    public List<Conflict> getConflicts(){
         ConflictFinder finder = new ConflictFinder(PATH);
         return finder.findConflicts();
     }

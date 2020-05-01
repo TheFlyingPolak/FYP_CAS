@@ -19,13 +19,16 @@ public class ConflictFinder {
         this.path = path;
     }
 
-    public Map<String, List<Long>> findConflicts(){
-        Map<String, Map<String, Value>> packagesMap = readPackages();
+    public List<Conflict> findConflicts(){
+        Map<String, Map<Key, Value>> packagesMap = readPackages();
         return getConflicts(packagesMap);
     }
 
-    private Map<String, Map<String, Value>> readPackages() {
-        Map<String, Map<String, Value>> map = new HashMap<>();
+    // outer map key: OS name
+    // inner map key: package name, package version
+    // inner map value: list of agents, conflict T/F
+    private Map<String, Map<Key, Value>> readPackages() {
+        Map<String, Map<Key, Value>> map = new HashMap<>();
         Gson gson = new Gson();
         File file = new File(path);
         String[] paths = file.list();
@@ -33,7 +36,6 @@ public class ConflictFinder {
         for (String pathname : paths){
             if (pathname.endsWith(".json")){
                 try {
-                    // TODO optimise this block of code
                     Reader reader = Files.newBufferedReader(Paths.get(path + pathname));
                     AgentResponse agent = gson.fromJson(reader, AgentResponse.class);
                     String os = agent.getOsName();
@@ -41,14 +43,13 @@ public class ConflictFinder {
                         map.put(os, new HashMap<>());
                     }
                     for (Package p : agent.getPackages()){
-                        if (!map.get(os).containsKey(p.getName())){
-                            map.get(os).put(p.getName(), new Value(p.getVersion(), agent.getId()));
+                        Key key = new Key(p.getName(), p.getVersion());
+                        if (!map.get(os).containsKey(key)){
+                            map.get(os).put(key, new Value(p.getVersion(), agent.getId()));
                         }
                         else{
-                            map.get(os).get(p.getName()).installedOn.add(agent.getId());
-                            if (!map.get(os).get(p.getName()).packageVersion.equals(p.getVersion())){
-                                map.get(os).get(p.getName()).conflict = true;
-                            }
+                            map.get(os).get(key).installedOn.add(agent.getId());
+                            System.out.println("!");
                         }
                     }
                 }
@@ -57,22 +58,46 @@ public class ConflictFinder {
                 }
             }
         }
+        for (String os: map.keySet()){
+            for (Key key: map.get(os).keySet()){
+                System.out.println(key.toString() + map.get(os).get(key).toString());
+            }
+        }
         return map;
     }
 
-    private Map<String, List<Long>> getConflicts(Map<String, Map<String, Value>> packages){
-        Map<String, List<Long>> conflicts = new HashMap<>();
-        for (Map.Entry<String, Map<String, Value>> i: packages.entrySet()){
-            for (Map.Entry<String, Value> j: i.getValue().entrySet()){
-                if (j.getValue().conflict){
-                    conflicts.putIfAbsent(j.getKey(), j.getValue().installedOn);
+    // outer map key: OS name
+    // inner map key: package name, package version
+    // inner map value: list of agents, conflict T/F
+    private List<Conflict> getConflicts(Map<String, Map<Key, Value>> packages){
+        List<Conflict> conflicts = new LinkedList<>();
+        for (Map.Entry<String, Map<Key, Value>> i: packages.entrySet()){
+            Map<String, List<String>> versionMap = new HashMap<>();
+            for (Map.Entry<Key, Value> j: i.getValue().entrySet()){
+                Key key = j.getKey();
+                Value value = j.getValue();
+                if (versionMap.containsKey(key.packageName)){
+                    if (!versionMap.get(key.packageName).contains(key.packageVersion)){
+                        versionMap.get(key.packageName).add(key.packageVersion);
+                    }
+                }
+                else{
+                    versionMap.put(key.packageName, new LinkedList<>());
+                    versionMap.get(key.packageName).add(key.packageVersion);
+                }
+            }
+            for (Map.Entry<Key, Value> j: i.getValue().entrySet()){
+                if (versionMap.get(j.getKey().packageName).size() > 1){
+                    Conflict conflict = new Conflict(j.getKey().packageName, j.getKey().packageVersion);
+                    conflict.setAgentId(j.getValue().installedOn);
+                    conflicts.add(conflict);
                 }
             }
         }
         return conflicts;
     }
 
-    private class Value{
+    private static class Value{
         String packageVersion;
         List<Long> installedOn;
         boolean conflict = false;
@@ -81,6 +106,38 @@ public class ConflictFinder {
             this.packageVersion = packageVersion;
             installedOn = new ArrayList<>();
             installedOn.add(agentId);
+        }
+
+        public String toString(){
+            return "[" + packageVersion + ", " + installedOn + ", " + conflict + "]";
+        }
+    }
+
+    private static class Key{
+        String packageName;
+        String packageVersion;
+
+        public Key(String packageName, String packageVersion){
+            this.packageName = packageName;
+            this.packageVersion = packageVersion;
+        }
+
+        public String toString(){
+            return "[" + packageName + ", " + packageVersion + "]";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Key key = (Key) o;
+            return Objects.equals(packageName, key.packageName) &&
+                    Objects.equals(packageVersion, key.packageVersion);
+        }
+
+        public int hashCode(){
+            String hash = packageName + packageVersion;
+            return hash.hashCode();
         }
     }
 }
