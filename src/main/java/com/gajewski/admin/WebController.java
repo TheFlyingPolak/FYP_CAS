@@ -9,4 +9,9 @@ public class WebController {
     public String homePage(){
         return "index";
     }
+
+    @GetMapping("/outofsync")
+    public String outOfSyncPage(){
+        return "outofsync";
+    }
 }

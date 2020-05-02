@@ -12,11 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.1/bootstrap-table.min.js"></script>
 </head>
 <body>
-    <script type="text/javascript" src="functions.js"></script>
     <script>
-        function buttonClick(id){
-            alert(id);
-        }
         // send command once, data is a single object
         function sendCommandToOne(command, id, time){
             id = id.substring(1);
@@ -62,7 +58,7 @@
     </script>
     <!-- Heading container -->
     <div class="container-fluid">
-        <h1 style="text-align: center">Package Version Management System (PVMS)</h1>
+        <h1 style="text-align: center">Package Version Management System (PaVMaS)</h1>
         <h1 style="text-align: center">Main Page</h1>
     </div>
     <!-- Button container -->
@@ -70,6 +66,7 @@
         <div class="btn-group">
             <button type="button" class="btn btn-primary" onclick="sendCommandToAll('log_now', null)">Log All Now</button>
             <button type="button" class="btn btn-primary" onclick="sendCommandToAll('change_log_time_interval', prompt('Enter new log time'))">Set Log Time For All</button>
+            <button type="button" class="btn btn-primary" onclick="location.href = 'outofsync'">View Out of Sync Package Versions</button>
         </div>
     </div>
     <!-- Agent data container -->
@@ -77,6 +74,7 @@
         <table class="table table-sm">
             <thead>
                 <tr>
+                    <th>Agent ID</th>
                     <th>Host Name</th>
                     <th>OS Name</th>
                     <th>OS Version</th>
@@ -91,7 +89,7 @@
     <!-- Package lists container -->
     <div class="container-fluid">
         <div class="container testimonial-group">
-                <div class="row text-center flex-nowrap" id="packages">
+                <div class="row flex-nowrap" id="packages">
 
                 </div>
         </div>
@@ -103,6 +101,7 @@
             var logButton = "<button type='button' class='btn btn-primary' id='l" + data[i]['id'] + "' onclick='sendCommandToOne(\"log_now\", this.id, null)'></button>";
             var timeButton = "<button type='button' class='btn btn-primary' id='t" + data[i]['id'] + "' onclick='sendCommandToOne(\"change_log_time_interval\", this.id, prompt(\"Enter new log time\"))'></button>";
             tablecontents += "<tr>";
+            tablecontents += "<td>" + data[i]["id"] + "</td>";
             tablecontents += "<td>" + data[i]["hostname"] + "</td>";
             tablecontents += "<td>" + data[i]["osName"] + "</td>";
             tablecontents += "<td>" + data[i]["osVersion"] + "</td>";
@@ -115,7 +114,7 @@
         // Construct table of package lists
         tablecontents = "";
         for (i = 0; i < data.length; i++){
-            tablecontents += "<div class='col-3'><h2>Agent " + data[i]["id"] + "</h2><table class='table table-sm'><thead><tr><th>Name</th><th>Version</th></tr></thead>";
+            tablecontents += "<div class='col-3 col-md-auto'><h2>Agent " + data[i]["id"] + "</h2><table class='table table-sm'><thead><tr><th>Name</th><th>Version</th></tr></thead>";
             tablecontents += "<tbody id='agent_" + data[i]['id'] + "'>";
             var packageList = data[i]["packages"];
             for (var j = 0; j < packageList.length; j++){
