@@ -45,7 +45,7 @@ public class ConflictFinder {
                     for (Package p : agent.getPackages()){
                         Key key = new Key(p.getName(), p.getVersion());
                         if (!map.get(os).containsKey(key)){
-                            map.get(os).put(key, new Value(p.getVersion(), agent.getId()));
+                            map.get(os).put(key, new Value(os, p.getVersion(), agent.getId()));
                         }
                         else{
                             map.get(os).get(key).installedOn.add(agent.getId());
@@ -56,11 +56,6 @@ public class ConflictFinder {
                 catch (IOException e){
                     System.out.println("Cannot read file " + pathname);
                 }
-            }
-        }
-        for (String os: map.keySet()){
-            for (Key key: map.get(os).keySet()){
-                System.out.println(key.toString() + map.get(os).get(key).toString());
             }
         }
         return map;
@@ -88,7 +83,7 @@ public class ConflictFinder {
             }
             for (Map.Entry<Key, Value> j: i.getValue().entrySet()){
                 if (versionMap.get(j.getKey().packageName).size() > 1){
-                    Conflict conflict = new Conflict(j.getKey().packageName, j.getKey().packageVersion);
+                    Conflict conflict = new Conflict(j.getKey().packageName, j.getValue().os, j.getKey().packageVersion);
                     conflict.setAgentId(j.getValue().installedOn);
                     conflicts.add(conflict);
                 }
@@ -98,18 +93,20 @@ public class ConflictFinder {
     }
 
     private static class Value{
+        String os;
         String packageVersion;
         List<Long> installedOn;
         boolean conflict = false;
 
-        public Value(String packageVersion, long agentId){
+        public Value(String os, String packageVersion, long agentId){
+            this.os = os;
             this.packageVersion = packageVersion;
             installedOn = new ArrayList<>();
             installedOn.add(agentId);
         }
 
         public String toString(){
-            return "[" + packageVersion + ", " + installedOn + ", " + conflict + "]";
+            return "[" + os + ", " + packageVersion + ", " + installedOn + ", " + conflict + "]";
         }
     }
 

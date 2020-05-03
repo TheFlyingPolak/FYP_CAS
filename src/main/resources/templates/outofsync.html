@@ -12,6 +12,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.1/bootstrap-table.min.js"></script>
 </head>
 <body>
+    <script>
+        var data = [];
+        $.ajax({
+            type: 'GET',
+            url: window.location.origin + '/conflicts',
+            contentType: "application/json",
+            dataType: 'json',
+            async: false,
+            success: function(d) {
+                $.each(d, function(key, value) {
+                    console.log(value);
+                    var conflict = [];
+                    conflict['packageName'] = value['packageName'];
+                    conflict['packageOs'] = value['packageOs'];
+                    conflict['packageVersion'] = value['packageVersion'];
+                    conflict['agentId'] = value['agentId'];
+                    data.push(conflict);
+                });
+            }
+        });
+    </script>
+    <!-- Heading container -->
     <div class="container-fluid">
         <h1 style="text-align: center">Package Version Management System (PaVMaS)</h1>
         <h1 style="text-align: center">Out of Sync Package Version Page</h1>
@@ -22,5 +44,62 @@
             <button type="button" class="btn btn-primary" onclick="location.href = '/'">Return to Main Page</button>
         </div>
     </div>
+    <!-- Conflict list container -->
+    <div class="container">
+        <table class="table table-sm">
+            <thead>
+            <tr>
+                <th>Package Name</th>
+                <th>Package Version</th>
+                <th>Package OS</th>
+                <th>View Agents</th>
+            </tr>
+            </thead>
+            <tbody id="package_list">
+            </tbody>
+        </table>
+    </div>
+    <!-- Agent list container -->
+    <div class="container">
+        <h2 id="package_heading"></h2>
+        <table class="table table-sm" id="agent_table">
+
+        </table>
+    </div>
+    <script>
+        function changePackageHeading(string){
+            var text = string.split("$$$");
+            document.getElementById("package_heading").textContent = text[0] + " " + text[1] + " (" + text[2] + ")";
+            var agents = [];
+            for (var i = 0; i < data.length; i++){
+                if (data[i]["packageName"] === text[0] && data[i]["packageVersion"] === text[1] && data[i]["packageOs"] === text[2]){
+                    agents = data[i]["agentId"]
+                }
+            }
+
+            var tableContents = "<thead><tr><th>Agents running version</th></tr></thead><tbody>";
+            for (i = 0; i < agents.length; i++){
+                tableContents += "<tr><td>" + agents[i] + "</td></tr>"
+            }
+            tableContents += "</tbody>";
+            document.getElementById("agent_table").innerHTML = tableContents;
+        }
+
+        // Construct list of packages
+        var tablecontents = "";
+        for (var i = 0; i < data.length; i++) {
+            var name = data[i]["packageName"];
+            var version = data[i]["packageVersion"];
+            var os = data[i]["packageOs"];
+            tablecontents += "<tr>";
+            tablecontents += "<td>" + name + "</td>";
+            tablecontents += "<td>" + version + "</td>";
+            tablecontents += "<td>" + os + "</td>";
+            tablecontents += "<td><button type='button' class='btn btn-primary' id='" + name + "$$$" + version + "$$$" + os + "' onclick='changePackageHeading(this.id)'></button></td>";
+            tablecontents += "</tr>";
+            console.log(name + " " + version + " " + os);
+        }
+        document.getElementById("package_list").innerHTML += tablecontents;
+    </script>
 </body>
 </html>
