@@ -17,10 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @RestController
-public class Controller {
+public class DataController {
     private static final int COMMAND_PORT = 8081;
     private static final String PATH = "E:/admin/agents/";
     private final RestTemplate restTemplate = new RestTemplateBuilder().build();
