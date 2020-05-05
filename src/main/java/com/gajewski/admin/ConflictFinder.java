@@ -49,7 +49,6 @@ public class ConflictFinder {
                         }
                         else{
                             map.get(os).get(key).installedOn.add(agent.getId());
-                            System.out.println("!");
                         }
                     }
                 }
