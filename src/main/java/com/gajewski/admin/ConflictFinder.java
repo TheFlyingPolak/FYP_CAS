@@ -3,20 +3,13 @@ package com.gajewski.admin;
 import com.gajewski.structures.AgentResponse;
 import com.gajewski.structures.Conflict;
 import com.gajewski.structures.Package;
-import com.google.gson.Gson;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class ConflictFinder {
-    private String path;
+    private DataRepository repository;
 
-    public ConflictFinder(String path){
-        this.path = path;
+    public ConflictFinder(DataRepository repository){
+        this.repository = repository;
     }
 
     public List<Conflict> findConflicts(){
@@ -29,31 +22,19 @@ public class ConflictFinder {
     // inner map value: list of agents, conflict T/F
     private Map<String, Map<Key, Value>> readPackages() {
         Map<String, Map<Key, Value>> map = new HashMap<>();
-        Gson gson = new Gson();
-        File file = new File(path);
-        String[] paths = file.list();
-        assert paths != null;
-        for (String pathname : paths){
-            if (pathname.endsWith(".json")){
-                try {
-                    Reader reader = Files.newBufferedReader(Paths.get(path + pathname));
-                    AgentResponse agent = gson.fromJson(reader, AgentResponse.class);
-                    String os = agent.getOsName();
-                    if (!map.containsKey(os)){
-                        map.put(os, new HashMap<>());
-                    }
-                    for (Package p : agent.getPackages()){
-                        Key key = new Key(p.getName(), p.getVersion());
-                        if (!map.get(os).containsKey(key)){
-                            map.get(os).put(key, new Value(os, p.getVersion(), agent.getId()));
-                        }
-                        else{
-                            map.get(os).get(key).installedOn.add(agent.getId());
-                        }
-                    }
+        List<AgentResponse> responses = repository.findAll();
+        for (AgentResponse agent : responses){
+            String os = agent.getOsName();
+            if (!map.containsKey(os)){
+                map.put(os, new HashMap<>());
+            }
+            for (Package p : agent.getPackages()){
+                Key key = new Key(p.getName(), p.getVersion());
+                if (!map.get(os).containsKey(key)){
+                    map.get(os).put(key, new Value(os, p.getVersion(), agent.getAgentId()));
                 }
-                catch (IOException e){
-                    System.out.println("Cannot read file " + pathname);
+                else{
+                    map.get(os).get(key).installedOn.add(agent.getAgentId());
                 }
             }
         }

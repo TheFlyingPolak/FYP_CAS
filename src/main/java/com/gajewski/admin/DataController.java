@@ -4,6 +4,7 @@ import com.gajewski.structures.Command;
 import com.gajewski.structures.Conflict;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,14 +25,19 @@ public class DataController {
     private static final String PATH = "E:/admin/agents/";
     private final RestTemplate restTemplate = new RestTemplateBuilder().build();
 
+    @Autowired
+    private DataRepository repository;
+
     @PostMapping("/agents")
-    public int postAgentData(@RequestBody AgentResponse response) throws IOException{
+    public long postAgentData(@RequestBody AgentResponse response) throws IOException{
         Gson gson = new GsonBuilder().create();
-        int id = findFreeId();
+        long id = findFreeId();
         String path = PATH + id + ".json";
+        response.setAgentId(id);
         Writer writer = new FileWriter(path);
         gson.toJson(response, writer);
         writer.close();
+        storeResponse(response);
         return id;
     }
 
@@ -39,37 +45,24 @@ public class DataController {
     public AgentResponse putAgentData(@PathVariable(value = "id") int id,
                                           @RequestBody AgentResponse response)throws Exception{
         if (!idExists(id))
-            throw new FileNotFoundException();
+            throw new FileNotFoundException("ID " + id + " not stored");
         Gson gson = new GsonBuilder().create();
         String path = PATH + id + ".json";
         Writer writer = new FileWriter(path);
         gson.toJson(response, writer);
         writer.close();
+        storeResponse(response);
         return response;
     }
 
     @GetMapping("/agents")
     public List<AgentResponse> getAllAgentData(){
-        List<AgentResponse> list = new ArrayList<>();
-        File file = new File(PATH);
-        String[] paths = file.list();
-        assert paths != null;
-        Gson gson = new Gson();
-        for (String pathname : paths){
-            if (pathname.endsWith(".json")) {
-                try {
-                    list.add(gson.fromJson(new FileReader(PATH + pathname), AgentResponse.class));
-                } catch (FileNotFoundException e) {
-                    System.out.println("File " + pathname + " not found");
-                }
-            }
-        }
-        return list;
+        return repository.findAll();
     }
 
     @GetMapping("/conflicts")
     public List<Conflict> getConflicts(){
-        ConflictFinder finder = new ConflictFinder(PATH);
+        ConflictFinder finder = new ConflictFinder(repository);
         return finder.findConflicts();
     }
 
@@ -119,14 +112,21 @@ public class DataController {
             throw new HttpClientErrorException(response.getStatusCode());
     }
 
-    public int findFreeId(){
-        int id = 0;
-        while (new File(PATH + id + ".json").exists())
+    public long findFreeId(){
+        long id = 0;
+        //while (new File(PATH + id + ".json").exists())
+        while(repository.findByAgentId(id) != null)
             id++;
         return id;
     }
 
-    public boolean idExists(int id){
-        return new File(PATH + id + ".json").exists();
+    public boolean idExists(long id){
+        return repository.findByAgentId(id) != null;
+    }
+
+    private void storeResponse(AgentResponse response){
+        if (repository.existsById(response.getAgentId()))
+            repository.deleteById(response.getAgentId());
+        repository.save(response);
     }
 }
